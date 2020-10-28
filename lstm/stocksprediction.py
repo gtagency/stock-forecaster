@@ -22,62 +22,96 @@ import pandas_datareader as reader
 import matplotlib.pyplot as plt
 plt.style.use('fivethirtyeight')
 
-#Target company
-target_company = 'AAPL'
-predictor_companies = ['MSFT', 'AMD', 'INTC']
-
-#Get previous target stock quotes
-tc = reader.DataReader(target_company, data_source='yahoo', start='2020-01-01')
-#show data
-tc
+#List of Companies to be analyzed
+companies = ['AAPL','MSFT', 'AMD', 'INTC']
+#Target company index
+target = 0
+#Sets the number of days the LSTM will use in the prediction
+sample_size = 60
 
 #Get previous stock quotes for predictor companies
-pred_quotes = reader.DataReader(predictor_companies, data_source='yahoo', start='2020-01-01')
-pred_quotes['Close']
-
-tc.shape
+quotes = reader.DataReader(companies, data_source='yahoo', start='2020-01-01')
+quotes['Close']
 
 #Visualize the closing price history for company data
 plt.figure(figsize=(16, 8))
 plt.title('Close Price History')
-plt.plot(tc['Close'])
-plt.plot(pred_quotes['Close'])
-plt.legend()
+plt.plot(quotes.Close)
+plt.legend(quotes)
 plt.xlabel('Data', fontsize=18)
 plt.ylabel('Close Price USD ($)', fontsize=18)
 plt.show
 
 #Create new data frames from only the Close column
-data_target = tc.filter(['Close'])
-data_pred = pred_quotes['Close']
+data = quotes.Close
 
 #Convert the data frames to an array
-dataset_target = data_target.values
-dataset_pred = data_pred.values
+dataset = data.values
 
 #Convert the number of rows to train the model on
-training_target_data_len = math.ceil(len(dataset_target) * .8)
-training_pred_data_len = math.ceil(len(dataset_pred) * .8)
-
-if (training_target_data_len != training_pred_data_len):
-  raise Exception('Data set build error')
-
-training_data_len = training_pred_data_len
+training_data_len = math.ceil(len(dataset) * .8)
 training_data_len
+
+data
 
 #Scale the data
 scaler = MinMaxScaler(feature_range=(0,1))
-scaled_target_data = scaler.fit_transform(dataset_target)
-scaled_pred_data = scaler.fit_transform(dataset_pred)
-# print(f'{scaled_pred_data}\n{scaled_target_data}')
+scaled_data = scaler.fit_transform(dataset);
+#scaled_data
+
+scaled_data.shape
+
+len(scaled_data)
 
 #Create the training data set
 #Create the scaled training data set
-train_target_data = scaled_target_data[0:training_data_len, :]
-train_pred_data = scaled_pred_data[0:training_data_len, :]
-x_train = []
+train_data = scaled_data[0:training_data_len, :]
+
+train_data
+
+#Change the train data into a numpy array
+train_data = np.array(train_data)
+#Transpose the train data array
+train_data = train_data.T
+train_data[0]
+
+#Create a numpy array of x train data 
+#LSTM expects the input to be 3 dimensional in the form num of samples, num of timesteps, num of features
+x_train = 0
+x_train_flag = 0
+for comp in range(train_data.shape[0]):
+  x_train_layer = []
+  for i in range(sample_size, train_data.shape[1]):
+    x_train_layer.append(train_data[comp][i - 60: i]);
+  x_train_layer = np.array(x_train_layer)
+  if (x_train_flag == 0):
+    x_train = x_train_layer
+    x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
+    x_train_flag = 1
+  else:
+    x_train_layer = np.reshape(x_train_layer, (x_train_layer.shape[0], x_train_layer.shape[1], 1))
+    x_train = np.concatenate((x_train, x_train_layer), axis=2)
+  
+x_train.shape
+
+#Create a list of y training values
 y_train = []
+for i in range(60, train_data.shape[1]):
+  y_train.append(train_data[target][i])
+print(len(y_train))
 
-for i in range (60, len(train_target_data)):
-  x_train.append(train_data)
+#Convert y_train into a numpy array
+y_train = np.array(y_train)
 
+#Building the LSTM model
+model = Sequential()
+model.add(LSTM(50, return_sequences=True, input_shape=(x_train.shape[1], 1)))
+model.add(LSTM(50, return_sequences=False))
+model.add(Dense(25))
+model.add(Dense(1))
+
+#Compile the model
+model.compile(optimizer='adam', loss='mean_squared_error')
+
+#Train the model
+model.fit(x_train, y_train, batch_size=1, epochs=1)
