@@ -26,3 +26,7 @@ def load_stock_data(tickername):
     #print(allinfo.tail())
     #print(allinfo.columns)
     return allinfo
+
+#creates a csv file to hold data 
+allinfo.to_csv(ticker +'.csv') 
+
