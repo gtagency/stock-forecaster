@@ -25,8 +25,11 @@ def load_stock_data(tickername):
     #print(allinfo.head())
     #print(allinfo.tail())
     #print(allinfo.columns)
-    return allinfo
 
-#creates a csv file to hold data 
-allinfo.to_csv(ticker +'.csv') 
+    # creates a csv file to hold data
+    allinfo.to_csv('data/' + ticker + '.csv')
+
+#sample input
+#load_stock_data('AAPL')
+
 
