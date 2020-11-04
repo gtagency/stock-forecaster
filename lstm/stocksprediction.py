@@ -29,8 +29,11 @@ target = 0
 #Sets the number of days the LSTM will use in the prediction
 sample_size = 60
 
+target_quotes = reader.DataReader(companies[target], data_source='yahoo', start='2012-01-01')
+target_quotes
+
 #Get previous stock quotes for predictor companies
-quotes = reader.DataReader(companies, data_source='yahoo', start='2020-01-01')
+quotes = reader.DataReader(companies, data_source='yahoo', start='2012-01-01')
 quotes['Close']
 
 #Visualize the closing price history for company data
@@ -75,6 +78,10 @@ train_data = np.array(train_data)
 train_data = train_data.T
 train_data[0]
 
+#Creating the testing dataset
+test_data = scaled_data[training_data_len - 60: , : ]
+test_data.shape
+
 #Create a numpy array of x train data 
 #LSTM expects the input to be 3 dimensional in the form num of samples, num of timesteps, num of features
 x_train = 0
@@ -105,7 +112,7 @@ y_train = np.array(y_train)
 
 #Building the LSTM model
 model = Sequential()
-model.add(LSTM(50, return_sequences=True, input_shape=(x_train.shape[1], 1)))
+model.add(LSTM(50, return_sequences=True, input_shape=(x_train.shape[1], x_train.shape[2])))
 model.add(LSTM(50, return_sequences=False))
 model.add(Dense(25))
 model.add(Dense(1))
@@ -115,3 +122,59 @@ model.compile(optimizer='adam', loss='mean_squared_error')
 
 #Train the model
 model.fit(x_train, y_train, batch_size=1, epochs=1)
+
+#Create the dataset for testing 
+test_data = scaled_data[training_data_len - 60: , :]
+test_data = test_data.T
+test_data.shape
+
+#Create the data set for x_test
+x_test = 0
+x_test_flag = 0
+print(test_data.shape[0])
+for comp in range(test_data.shape[0]):
+  x_test_layer = []
+  for i in range(sample_size, test_data.shape[1]):
+    x_test_layer.append(test_data[comp][i - 60: i]);
+  x_test_layer = np.array(x_test_layer)
+  if (x_test_flag == 0):
+    x_test = x_test_layer
+    x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
+    x_test_flag = 1
+  else:
+    x_test_layer = np.reshape(x_test_layer, (x_test_layer.shape[0], x_test_layer.shape[1], 1))
+    x_test = np.concatenate((x_test, x_test_layer), axis=2)
+  
+x_test.shape
+
+#Create the data set for y_test
+y_test = dataset[training_data_len:, :]
+y_test
+
+#Get the models predicted price values
+predictions = model.predict(x_test)
+#The scaler expects the array to be a multidimensional array
+predictions = np.concatenate((predictions, predictions), axis=1)
+predictions = np.concatenate((predictions, predictions), axis=1)
+#Remove the scalling on the model
+predictions = scaler.inverse_transform(predictions)
+predictions = predictions.T[0].T
+predictions = np.reshape(predictions, (predictions.shape[0], 1))
+predictions.shape
+
+#Get the root mean square error (RMSE)
+rmse=np.sqrt(np.mean(((predictions- y_test)**2)))
+rmse
+
+#Plot the data
+train = target_quotes[:training_data_len]
+valid = target_quotes[training_data_len: ]
+valid['Predictions'] = predictions
+#Visualize the data
+plt.figure(figsize=(16,8))
+plt.title('Model')
+plt.xlabel('Date', fontsize=18)
+plt.ylabel('Close Price USD ($)', fontsize=18)
+plt.plot(quotes['Close'])
+plt.plot(valid[['Close', 'Predictions']])
+plt.legend(['Train', 'Val', 'Predictions'], loc='lower right')
