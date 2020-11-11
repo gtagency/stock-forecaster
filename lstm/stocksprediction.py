@@ -29,11 +29,11 @@ target = 0
 #Sets the number of days the LSTM will use in the prediction
 sample_size = 60
 
-target_quotes = reader.DataReader(companies[target], data_source='yahoo', start='2012-01-01')
+target_quotes = reader.DataReader(companies[target], data_source='yahoo', start='2011-01-01')
 target_quotes
 
 #Get previous stock quotes for predictor companies
-quotes = reader.DataReader(companies, data_source='yahoo', start='2012-01-01')
+quotes = reader.DataReader(companies, data_source='yahoo', start='2011-01-01')
 quotes['Close']
 
 #Visualize the closing price history for company data
@@ -59,7 +59,7 @@ data
 
 #Scale the data
 scaler = MinMaxScaler(feature_range=(0,1))
-scaled_data = scaler.fit_transform(dataset);
+scaled_data = scaler.fit_transform(dataset)
 #scaled_data
 
 scaled_data.shape
@@ -166,15 +166,16 @@ predictions.shape
 rmse=np.sqrt(np.mean(((predictions- y_test)**2)))
 rmse
 
-#Plot the data
-train = target_quotes[:training_data_len]
-valid = target_quotes[training_data_len: ]
-valid['Predictions'] = predictions
-#Visualize the data
-plt.figure(figsize=(16,8))
-plt.title('Model')
-plt.xlabel('Date', fontsize=18)
-plt.ylabel('Close Price USD ($)', fontsize=18)
-plt.plot(quotes['Close'])
-plt.plot(valid[['Close', 'Predictions']])
-plt.legend(['Train', 'Val', 'Predictions'], loc='lower right')
+import csv
+
+def csvEditor(fileName, data, type):
+    with open(f'{fileName}', f'{type}', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(data)
+
+csvEditor("./data.csv", predictions.T[0], 'w')
+
+
+
+
+
