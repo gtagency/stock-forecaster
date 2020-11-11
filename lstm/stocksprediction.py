@@ -36,15 +36,6 @@ target_quotes
 quotes = reader.DataReader(companies, data_source='yahoo', start='2011-01-01')
 quotes['Close']
 
-#Visualize the closing price history for company data
-plt.figure(figsize=(16, 8))
-plt.title('Close Price History')
-plt.plot(quotes.Close)
-plt.legend(quotes)
-plt.xlabel('Data', fontsize=18)
-plt.ylabel('Close Price USD ($)', fontsize=18)
-plt.show
-
 #Create new data frames from only the Close column
 data = quotes.Close
 
@@ -55,22 +46,13 @@ dataset = data.values
 training_data_len = math.ceil(len(dataset) * .8)
 training_data_len
 
-data
-
 #Scale the data
 scaler = MinMaxScaler(feature_range=(0,1))
 scaled_data = scaler.fit_transform(dataset)
-#scaled_data
-
-scaled_data.shape
-
-len(scaled_data)
 
 #Create the training data set
 #Create the scaled training data set
 train_data = scaled_data[0:training_data_len, :]
-
-train_data
 
 #Change the train data into a numpy array
 train_data = np.array(train_data)
@@ -105,7 +87,6 @@ x_train.shape
 y_train = []
 for i in range(60, train_data.shape[1]):
   y_train.append(train_data[target][i])
-print(len(y_train))
 
 #Convert y_train into a numpy array
 y_train = np.array(y_train)
@@ -126,12 +107,11 @@ model.fit(x_train, y_train, batch_size=1, epochs=1)
 #Create the dataset for testing 
 test_data = scaled_data[training_data_len - 60: , :]
 test_data = test_data.T
-test_data.shape
+
 
 #Create the data set for x_test
 x_test = 0
 x_test_flag = 0
-print(test_data.shape[0])
 for comp in range(test_data.shape[0]):
   x_test_layer = []
   for i in range(sample_size, test_data.shape[1]):
@@ -173,7 +153,7 @@ def csvEditor(fileName, data, type):
         writer = csv.writer(file)
         writer.writerow(data)
 
-csvEditor("./data.csv", predictions.T[0], 'w')
+csvEditor("data/lstmOutput.csv", predictions.T[0], 'w')
 
 
 
