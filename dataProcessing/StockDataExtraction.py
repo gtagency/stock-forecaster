@@ -15,30 +15,23 @@ def load_stock_data(tickername):
 
     #input stock name
     ticker = tickername
-    
-    #Pull stock info from CSV if CSV exists
-    if os.path.isfile(ticker + '.csv') :
-        allinfo = pd.read_csv (ticker + '.csv')
-        #print(allinfo.head())
-        #print(allinfo.tail())
 
     #get stock info for past 10 years and calculate daily volatility and change.
-    else:
-        try: 
-            allinfo = pdr.get_data_yahoo(ticker, start, end)
-        except:
-            print("Enter a proper ticker!")
-        allinfo['Daily Volatility'] = 100*(allinfo['High']-allinfo['Low'])/allinfo['Low']
-        allinfo['Daily Change'] = 100*(allinfo['Adj Close']-allinfo['Open'])/allinfo['Open']
-        #print(type(allinfo))
-        #print(allinfo.head())
-        #print(allinfo.tail())
-        #print(allinfo.columns)
+    try:
+        allinfo = pdr.get_data_yahoo(ticker, start, end)
+    except:
+        print("Enter a proper ticker!")
+    allinfo['Daily Volatility'] = 100*(allinfo['High']-allinfo['Low'])/allinfo['Low']
+    allinfo['Daily Change'] = 100*(allinfo['Adj Close']-allinfo['Open'])/allinfo['Open']
+    #print(type(allinfo))
+    #print(allinfo.head())
+    #print(allinfo.tail())
+    #print(allinfo.columns)
 
-        # creates a csv file to hold data
-        allinfo.to_csv('data/' + ticker + '.csv')
+    # creates a csv file to hold data
+    allinfo.to_csv('../data/' + ticker + '.csv')
 
 #sample input
-#load_stock_data('AAPL')
+load_stock_data('AAPL')
 
 

@@ -80,8 +80,6 @@ for comp in range(train_data.shape[0]):
   else:
     x_train_layer = np.reshape(x_train_layer, (x_train_layer.shape[0], x_train_layer.shape[1], 1))
     x_train = np.concatenate((x_train, x_train_layer), axis=2)
-  
-x_train.shape
 
 #Create a list of y training values
 y_train = []

@@ -8,7 +8,7 @@ def preprocess_data(ticker):
 
     data = df.values
     num_of_days = 50
-    
+
     #create minmaxscaler object for data processing/normalizing
     scaler = preprocessing.MinMaxScaler()
 
